@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Event Caller - Tap To Dial</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            background-color: #f8fafc;
+            color: #0f172a;
+            padding: 10px;
+            padding-bottom: 150px;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+        .header-card {
+            background: linear-gradient(135deg, #059669, #0f766e);
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+        .header-card h1 {
+            margin: 0;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .header-card p {
+            margin: 4px 0 0 0;
+            font-size: 11px;
+            opacity: 0.9;
+        }
+        
+        .filter-panel {
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .panel-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .panel-title {
+            font-size: 12px;
+            font-weight: bold;
+            color: #475569;
+        }
+        .range-field {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 6px 10px;
+            background: #f8fafc;
+        }
+        .range-field label {
+            font-size: 11px;
+            color: #64748b;
+            margin-right: 6px;
+            white-space: nowrap;
+            font-weight: bold;
+        }
+        .range-field input {
+            width: 100%;
+            border: none;
+            background: transparent;
+            font-size: 13px;
+            outline: none;
+            font-weight: bold;
+            text-align: center;
+        }
+        .all-range-btn {
+            background-color: #64748b;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .presets-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        .preset-btn {
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 11px;
+            font-weight: bold;
+            color: #475569;
+            cursor: pointer;
+        }
+        .preset-btn:active {
+            background: #cbd5e1;
+        }
+        .toggle-completed {
+            display: flex;
+            align-items: center;
+            font-size: 12px;
+            font-weight: bold;
+            color: #334155;
+            cursor: pointer;
+            margin-top: 4px;
+        }
+        .toggle-completed input {
+            margin-right: 6px;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .search-bar {
+            flex-grow: 1;
+            padding: 10px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            background: white;
+        }
+        .search-bar:focus {
+            border-color: #059669;
+            box-shadow: 0 0 0 2px rgba(5, 150, 105, 0.15);
+        }
+        .reset-btn {
+            background-color: #ef4444;
+            color: white;
+            border: none;
+            padding: 0 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: bold;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .reset-btn:active {
+            opacity: 0.8;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            margin-bottom: 40px;
+        }
+        th {
+            padding: 12px 10px;
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            border: 1px solid #cbd5e1;
+        }
+        th:nth-child(1) {
+            background-color: #ffffff;
+            color: #1155cc;
+            width: 15%;
+        }
+        th:nth-child(2) {
+            background-color: #ffffff;
+            color: #000000;
+            width: 50%;
+        }
+        th:nth-child(3) {
+            background-color: #ffff00;
+            color: #ff0000;
+            width: 35%;
+        }
+        
+        td {
+            padding: 12px 8px;
+            border: 1px solid #e2e8f0;
+            text-align: center;
+            font-size: 14px;
+            vertical-align: middle;
+        }
+        .sno-cell {
+            font-weight: bold;
+            color: #475569;
+            font-size: 14px;
+        }
+        .name-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            text-align: left;
+            padding-left: 2px;
+        }
+        .name-cell {
+            font-weight: bold;
+            color: #1e293b;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .badge-pill {
+            display: inline-flex;
+            align-items: center;
+            font-size: 9px;
+            font-weight: bold;
+            padding: 1px 5px;
+            border-radius: 10px;
+            margin-top: 3px;
+        }
+        .badge-none { display: none; }
+        .badge-completed { background-color: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
+        .badge-no_answer { background-color: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+        .badge-switched_off { background-color: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; }
+        .badge-poor_signal { background-color: #ffe4e6; color: #9f1239; border: 1px solid #fecdd3; }
+
+        .phone-link {
+            display: inline-block;
+            background-color: #f0fdf4;
+            color: #ff0000;
+            font-weight: bold;
+            font-size: 15px;
+            text-decoration: none;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid #bbf7d0;
+            width: 100%;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        .phone-link:active {
+            background-color: #dcfce7;
+        }
+
+        tr.last-dialed-row {
+            background-color: #fef08a !important;
+            border: 3px solid #eab308;
+        }
+        tr.last-dialed-row td {
+            border-top: 2px solid #eab308;
+            border-bottom: 2px solid #eab308;
+        }
+        tr.last-dialed-row .sno-cell {
+            position: relative;
+            color: #854d0e;
+        }
+        tr.last-dialed-row .sno-cell::before {
+            content: "👉 ";
+            font-size: 11px;
+            position: absolute;
+            left: 1px;
+        }
+        
+        tr.already-dialed-row {
+            background-color: #f1f5f9;
+            opacity: 0.82;
+        }
+        tr.already-dialed-row .name-cell {
+            color: #64748b;
+            text-decoration: line-through;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: #64748b;
+            font-size: 13px;
+        }
+
+        /* Floating Outcomes Selection Panel */
+        .feedback_panel {
+            position: fixed;
+            bottom: 12px;
+            left: 10px;
+            right: 10px;
+            background-color: #1e293b;
+            color: white;
+            border-radius: 16px;
+            padding: 12px 14px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.4);
+            z-index: 1000;
+            border: 1px solid #334155;
+            display: none;
+        }
+        .feedback_header {
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .feedback_header span {
+            color: #facc15;
+            text-decoration: underline;
+        }
+        .feedback_body {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+        @media(min-width: 480px){
+            .feedback_body {
+                grid-template-columns: repeat(5, 1fr);
+            }
+        }
+        .outcome_btn {
+            border: none;
+            border-radius: 8px;
+            padding: 10px 4px;
+            font-size: 11px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            text-align: center;
+        }
+        .outcome_btn:active {
+            opacity: 0.9;
+        }
+        .btn_completed { background-color: #10b981; }
+        .btn_no_answer { background-color: #f59e0b; }
+        .btn_switched_off { background-color: #64748b; }
+        .btn_poor_signal { background-color: #ef4444; }
+        .btn_clear_st { background-color: transparent; border: 1.5px dashed #475569; color: #94a3b8; }
+        .close_prompt {
+            color: #cbd5e1;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0 4px;
+        }
+        
+        .tip-banner {
+            font-size: 11px;
+            color: #475569;
+            text-align: center;
+            margin-top: 6px;
+            margin-bottom: 12px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-card">
+        <h1>Event Invitation Dialer</h1>
+        <p>Tapping numbers calls instantly • Tap guest names to log offline status outcomes</p>
+    </div>
+
+    <!-- S.No RANGE FILTER PANEL -->
+    <div class="filter-panel">
+        <div class="panel-row" style="justify-content: space-between;">
+            <div class="panel-title">⭐ Filter S.No Range (1 - 134)</div>
+            <button class="all-range-btn" onclick="clearOfflineRange()">Show All</button>
+        </div>
+        
+        <div class="panel-row">
+            <div class="range-field">
+                <label>From:</label>
+                <input type="number" id="rngFrom" placeholder="1" min="1" max="134" oninput="onRangeChange()">
+            </div>
+            <div class="range-field">
+                <label>To:</label>
+                <input type="number" id="rngTo" placeholder="134" min="1" max="134" oninput="onRangeChange()">
+            </div>
+        </div>
+
+        <div class="presets-bar">
+            <button class="preset-btn" onclick="presetOfflineRange(1, 25)">1 - 25</button>
+            <button class="preset-btn" onclick="presetOfflineRange(26, 50)">26 - 50</button>
+            <button class="preset-btn" onclick="presetOfflineRange(51, 75)">51 - 75</button>
+            <button class="preset-btn" onclick="presetOfflineRange(76, 100)">76 - 100</button>
+            <button class="preset-btn" onclick="presetOfflineRange(101, 134)">101 - 134</button>
+        </div>
+
+        <label class="toggle-completed">
+            <input type="checkbox" id="hideCompletedChk" checked onchange="toggleCompletedVisibility()">
+            Hide Completed Contacts
+        </label>
+    </div>
+
+    <div class="toolbar">
+        <input type="text" id="searchInput" class="search-bar" placeholder="Search by name, number, or S.No..." oninput="filterContacts()">
+        <button class="reset-btn" onclick="clearOfflineDialHistory()">Reset All</button>
+    </div>
+    
+    <div class="tip-banner">💡 Tip: Tap a guest's name to instantly change their status outcome.</div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>S.No</th>
+                <th>Name & Status</th>
+                <th>Phone</th>
+            </tr>
+        </thead>
+        <tbody id="contactsTableBody">
+            <!-- Table rows are drawn by JavaScript -->
+        </tbody>
+    </table>
+
+    <!-- Floating status input bar -->
+    <div id="feedbackPanel" class="feedback_panel">
+        <div class="feedback_header">
+            <div>📞 Callback Feedback: <span id="promptName">guest</span></div>
+            <button class="close_prompt" onclick="closeFeedbackPanel()">✕</button>
+        </div>
+        <div class="feedback_body">
+            <button class="outcome_btn btn_completed" onclick="setOfflineStatus('completed')">Completed</button>
+            <button class="outcome_btn btn_no_answer" onclick="setOfflineStatus('no_answer')">No Answer</button>
+            <button class="outcome_btn btn_switched_off" onclick="setOfflineStatus('switched_off')">Switch Off</button>
+            <button class="outcome_btn btn_poor_signal" onclick="setOfflineStatus('poor_signal')">Poor Signal</button>
+            <button class="outcome_btn btn_clear_st" onclick="setOfflineStatus(null)">Clear Status</button>
+        </div>
+    </div>
+
+    <script>
+        // Pre-embedded contact list of 134 guests
+        const contacts_list = [
+  {
+    "id": 1,
+    "name": "Venkat",
+    "phone": "7730084557"
+  },
+  {
+    "id": 2,
+    "name": "K V Nagendra (SRKR) Nellore",
+    "phone": "9550044554"
+  },
+  {
+    "id": 3,
+    "name": "Sanyasi Naidu",
+    "phone": "8125475084"
+  },
+  {
+    "id": 4,
+    "name": "Babi Rice Shop",
+    "phone": "8143499949"
+  },
+  {
+    "id": 5,
+    "name": "D Vardhan",
+    "phone": "9059948566"
+  },
+  {
+    "id": 6,
+    "name": "D Sriram",
+    "phone": "8125733489"
+  },
+  {
+    "id": 7,
+    "name": "Harsha SRKR",
+    "phone": "9959774779"
+  },
+  {
+    "id": 8,
+    "name": "Narasimha Travels",
+    "phone": "9963671079"
+  },
+  {
+    "id": 9,
+    "name": "Shoban Babu",
+    "phone": "7702260266"
+  },
+  {
+    "id": 10,
+    "name": "Srinivas",
+    "phone": "9848349625"
+  },
+  {
+    "id": 11,
+    "name": "Harish DNR",
+    "phone": "9885922644"
+  },
+  {
+    "id": 12,
+    "name": "Rajesh Kirana Shop",
+    "phone": "9849202195"
+  },
+  {
+    "id": 13,
+    "name": "Maruthi",
+    "phone": "9951957990"
+  },
+  {
+    "id": 14,
+    "name": "Indukuri Sarada",
+    "phone": "9490645762"
+  },
+  {
+    "id": 15,
+    "name": "Ranga Rajasekhar",
+    "phone": "9542354574"
+  },
+  {
+    "id": 16,
+    "name": "Ch Visalakshi",
+    "phone": "9392497249"
+  },
+  {
+    "id": 17,
+    "name": "Gowri Naidu 1",
+    "phone": "9949688240"
+  },
+  {
+    "id": 18,
+    "name": "PVRK Varma",
+    "phone": "9394512349"
+  },
+  {
+    "id": 19,
+    "name": "Mani VHP",
+    "phone": "9491141971"
+  },
+  {
+    "id": 20,
+    "name": "Gowri Naidu 2",
+    "phone": "7075189996"
+  },
+  {
+    "id": 21,
+    "name": "Ramakrishna",
+    "phone": "9553549358"
+  },
+  {
+    "id": 22,
+    "name": "K V Narayana",
+    "phone": "9848371466"
+  },
+  {
+    "id": 23,
+    "name": "Sai Krishna Badri Lodge",
+    "phone": "8500059994"
+  },
+  {
+    "id": 24,
+    "name": "Sunny Babu",
+    "phone": "9550567997"
+  },
+  {
+    "id": 25,
+    "name": "Satyanarayana",
+    "phone": "7569811119"
+  },
+  {
+    "id": 26,
+    "name": "Chandra Sekhar",
+    "phone": "9701696556"
+  },
+  {
+    "id": 27,
+    "name": "Chinamilli Vasu",
+    "phone": "9949644099"
+  },
+  {
+    "id": 28,
+    "name": "Dhanunjaya",
+    "phone": "9493639729"
+  },
+  {
+    "id": 29,
+    "name": "Seshu Krishna",
+    "phone": "8106253543"
+  },
+  {
+    "id": 30,
+    "name": "Gopala Krishna",
+    "phone": "9396463899"
+  },
+  {
+    "id": 31,
+    "name": "Siva Kumar",
+    "phone": "9618218995"
+  },
+  {
+    "id": 32,
+    "name": "Kalyan",
+    "phone": "9908715567"
+  },
+  {
+    "id": 33,
+    "name": "Kranthi",
+    "phone": "7989934888"
+  },
+  {
+    "id": 34,
+    "name": "Krishna",
+    "phone": "9705177789"
+  },
+  {
+    "id": 35,
+    "name": "Ch Krishna Kumar",
+    "phone": "9848619003"
+  },
+  {
+    "id": 36,
+    "name": "Krishnam Raju Vempa",
+    "phone": "9949211191"
+  },
+  {
+    "id": 37,
+    "name": "Krishna Murthy",
+    "phone": "9000821343"
+  },
+  {
+    "id": 38,
+    "name": "Lalitha",
+    "phone": "9494487873"
+  },
+  {
+    "id": 39,
+    "name": "Madhu Babu",
+    "phone": "9949194846"
+  },
+  {
+    "id": 40,
+    "name": "Manikanta",
+    "phone": "9959999546"
+  },
+  {
+    "id": 41,
+    "name": "Murali Krishna",
+    "phone": "9177007547"
+  },
+  {
+    "id": 42,
+    "name": "Nagamani",
+    "phone": "9640802566"
+  },
+  {
+    "id": 43,
+    "name": "Nagarjuna",
+    "phone": "8008868008"
+  },
+  {
+    "id": 44,
+    "name": "Nagendra",
+    "phone": "9885836109"
+  },
+  {
+    "id": 45,
+    "name": "Nelaraju",
+    "phone": "9966232359"
+  },
+  {
+    "id": 46,
+    "name": "Nori Venkateswarulu VHP",
+    "phone": "9849201996"
+  },
+  {
+    "id": 47,
+    "name": "Parasuram",
+    "phone": "9290694137"
+  },
+  {
+    "id": 48,
+    "name": "Prasad",
+    "phone": "9963944455"
+  },
+  {
+    "id": 49,
+    "name": "Prasad",
+    "phone": "9866955556"
+  },
+  {
+    "id": 50,
+    "name": "Rama Raju BJP",
+    "phone": "9888411119"
+  },
+  {
+    "id": 51,
+    "name": "Ramesh Karate",
+    "phone": "9515279599"
+  },
+  {
+    "id": 52,
+    "name": "Ramu",
+    "phone": "9666012612"
+  },
+  {
+    "id": 53,
+    "name": "Ramu",
+    "phone": "8885175759"
+  },
+  {
+    "id": 54,
+    "name": "Ramu",
+    "phone": "9182999488"
+  },
+  {
+    "id": 55,
+    "name": "Ramu",
+    "phone": "7702899709"
+  },
+  {
+    "id": 56,
+    "name": "Srinivasa Raju",
+    "phone": "9399344499"
+  },
+  {
+    "id": 57,
+    "name": "Rohit Chopra Fashions",
+    "phone": "9553346869"
+  },
+  {
+    "id": 58,
+    "name": "Subrahmanyam",
+    "phone": "9490745372"
+  },
+  {
+    "id": 59,
+    "name": "Vamsi",
+    "phone": "9550504004"
+  },
+  {
+    "id": 60,
+    "name": "Vara Prasad",
+    "phone": "9912687925"
+  },
+  {
+    "id": 61,
+    "name": "Viswanadha Raju",
+    "phone": "7382568409"
+  },
+  {
+    "id": 62,
+    "name": "Viswanadha Raju",
+    "phone": "8886222444"
+  },
+  {
+    "id": 63,
+    "name": "Krishna",
+    "phone": "9912705505"
+  },
+  {
+    "id": 64,
+    "name": "Viswanadh",
+    "phone": "9291228623"
+  },
+  {
+    "id": 65,
+    "name": "Vinayaka Travels",
+    "phone": "9000121314"
+  },
+  {
+    "id": 66,
+    "name": "Hari Krishna Vemireddy",
+    "phone": "9848184609"
+  },
+  {
+    "id": 67,
+    "name": "Swathi",
+    "phone": "9849032327"
+  },
+  {
+    "id": 68,
+    "name": "Ramu Eshwar",
+    "phone": "9985945515"
+  },
+  {
+    "id": 69,
+    "name": "Srinivasa Raju",
+    "phone": "7013181085"
+  },
+  {
+    "id": 70,
+    "name": "Nookala Satyanarayana",
+    "phone": "7030022922"
+  },
+  {
+    "id": 71,
+    "name": "Ganesh Kala Prabhakar",
+    "phone": "7993662581"
+  },
+  {
+    "id": 72,
+    "name": "Ashwin Varma",
+    "phone": "8790604223"
+  },
+  {
+    "id": 73,
+    "name": "Subrahmanya Sastry",
+    "phone": "8886921331"
+  },
+  {
+    "id": 74,
+    "name": "Sailendra",
+    "phone": "8985716572"
+  },
+  {
+    "id": 75,
+    "name": "Siriyala Kanaka Durga",
+    "phone": "9030030899"
+  },
+  {
+    "id": 76,
+    "name": "Gola Koti Mahesh",
+    "phone": "9133206503"
+  },
+  {
+    "id": 77,
+    "name": "Kondeti Sunanda",
+    "phone": "9390397689"
+  },
+  {
+    "id": 78,
+    "name": "Srinivas",
+    "phone": "9440377744"
+  },
+  {
+    "id": 79,
+    "name": "Srikanth Gupta",
+    "phone": "9441288222"
+  },
+  {
+    "id": 80,
+    "name": "Appala Naidu",
+    "phone": "9490052682"
+  },
+  {
+    "id": 81,
+    "name": "Anjaneya Raju Mantena",
+    "phone": "9490718314"
+  },
+  {
+    "id": 82,
+    "name": "P D V Soma Raju",
+    "phone": "9490744637"
+  },
+  {
+    "id": 83,
+    "name": "Gopi Tenneti",
+    "phone": "9553457862"
+  },
+  {
+    "id": 84,
+    "name": "Parameshwar Rao",
+    "phone": "9666101234"
+  },
+  {
+    "id": 85,
+    "name": "Anjaneya Raju",
+    "phone": "9666333788"
+  },
+  {
+    "id": 86,
+    "name": "Ch Ravi",
+    "phone": "9703914429"
+  },
+  {
+    "id": 87,
+    "name": "Shiva Kumar",
+    "phone": "9866805121"
+  },
+  {
+    "id": 88,
+    "name": "Hari Babu",
+    "phone": "9885567355"
+  },
+  {
+    "id": 89,
+    "name": "Niharika Kondeti",
+    "phone": "9959244455"
+  },
+  {
+    "id": 90,
+    "name": "Dr Narasimha Raju",
+    "phone": "9963222525"
+  },
+  {
+    "id": 91,
+    "name": "Uma Parvathi",
+    "phone": "9989649097"
+  },
+  {
+    "id": 92,
+    "name": "Durga Rao",
+    "phone": "9392579018"
+  },
+  {
+    "id": 93,
+    "name": "G Pawan Kumar",
+    "phone": "9441094604"
+  },
+  {
+    "id": 94,
+    "name": "Sandeep",
+    "phone": "9848222922"
+  },
+  {
+    "id": 95,
+    "name": "Jyothik",
+    "phone": "8333871104"
+  },
+  {
+    "id": 96,
+    "name": "Mahesh",
+    "phone": "9703776522"
+  },
+  {
+    "id": 97,
+    "name": "Venkata Lakshmi",
+    "phone": "8897099759"
+  },
+  {
+    "id": 98,
+    "name": "Naga Srinivas",
+    "phone": "8790312672"
+  },
+  {
+    "id": 99,
+    "name": "Srihari",
+    "phone": "9959207795"
+  },
+  {
+    "id": 100,
+    "name": "Raghunath",
+    "phone": "9849836896"
+  },
+  {
+    "id": 101,
+    "name": "Linga Raju",
+    "phone": "9912572568"
+  },
+  {
+    "id": 102,
+    "name": "Maha Lakshmi",
+    "phone": "9494756848"
+  },
+  {
+    "id": 103,
+    "name": "Rajesh",
+    "phone": "9705062229"
+  },
+  {
+    "id": 104,
+    "name": "Durga Devi",
+    "phone": "9000166116"
+  },
+  {
+    "id": 105,
+    "name": "Surya Narayana Raju",
+    "phone": "9866443378"
+  },
+  {
+    "id": 106,
+    "name": "Venkata Ratna Kumar",
+    "phone": "7675076502"
+  },
+  {
+    "id": 107,
+    "name": "G Surya Narayana",
+    "phone": "9908665875"
+  },
+  {
+    "id": 108,
+    "name": "R Venkat",
+    "phone": "6309729065"
+  },
+  {
+    "id": 109,
+    "name": "Krishna Mohan",
+    "phone": "9052496284"
+  },
+  {
+    "id": 110,
+    "name": "Pavan ABVP",
+    "phone": "8019559776"
+  },
+  {
+    "id": 111,
+    "name": "Bhanu Satya Prakash",
+    "phone": "9441422585"
+  },
+  {
+    "id": 112,
+    "name": "Naga Raju",
+    "phone": "6281738413"
+  },
+  {
+    "id": 113,
+    "name": "SV Satyanarayana",
+    "phone": "9491249188"
+  },
+  {
+    "id": 114,
+    "name": "Siddhu",
+    "phone": "7981777099"
+  },
+  {
+    "id": 115,
+    "name": "Ravi",
+    "phone": "9703914429"
+  },
+  {
+    "id": 116,
+    "name": "P Srinivasa Raju",
+    "phone": "7032702667"
+  },
+  {
+    "id": 117,
+    "name": "A Siva Kumar",
+    "phone": "9948034749"
+  },
+  {
+    "id": 118,
+    "name": "Tarun",
+    "phone": "6304399638"
+  },
+  {
+    "id": 119,
+    "name": "Anjani Kumar Friend",
+    "phone": "7286932246"
+  },
+  {
+    "id": 120,
+    "name": "Trimurthulu Bendi",
+    "phone": "9849169909"
+  },
+  {
+    "id": 121,
+    "name": "Ramana",
+    "phone": "9248044558"
+  },
+  {
+    "id": 122,
+    "name": "K Ravi Kumar",
+    "phone": "9866377629"
+  },
+  {
+    "id": 123,
+    "name": "Indukuri Vital",
+    "phone": "9949636649"
+  },
+  {
+    "id": 124,
+    "name": "Dr Prabhakar Sarma",
+    "phone": "7013290220"
+  },
+  {
+    "id": 125,
+    "name": "Swathi Satyanarayana",
+    "phone": "9989186693"
+  },
+  {
+    "id": 126,
+    "name": "S Nageswar Rao",
+    "phone": "9652288536"
+  },
+  {
+    "id": 127,
+    "name": "Sundari",
+    "phone": "8688486982"
+  },
+  {
+    "id": 128,
+    "name": "R V Srinivas Gupta",
+    "phone": "8555898285"
+  },
+  {
+    "id": 129,
+    "name": "Aduri Rama Mohana Rao",
+    "phone": "9989087575"
+  },
+  {
+    "id": 130,
+    "name": "TVV Satya Narayana",
+    "phone": "9866513993"
+  },
+  {
+    "id": 131,
+    "name": "Ranga Rajasekhar",
+    "phone": "9542354574"
+  },
+  {
+    "id": 132,
+    "name": "Prakash Rao",
+    "phone": "8801094757"
+  },
+  {
+    "id": 133,
+    "name": "Rama Chandra Rao",
+    "phone": "9441169969"
+  },
+  {
+    "id": 134,
+    "name": "T R Narasimha Murthi",
+    "phone": "9440330990"
+  }
+];
+
+        // Storage keys
+        const STORAGE_KEY_LAST = 'event_caller_last_dialed_id_v4';
+        const STORAGE_KEY_HIST = 'event_caller_dialed_history_v4';
+        const STORAGE_KEY_STATUSES = 'event_caller_statuses_v4';
+        const STORAGE_KEY_HIDE_COMPLETED = 'event_caller_hide_completed_v4';
+        const STORAGE_KEY_RANGE_FROM = 'event_caller_range_from_v4';
+        const STORAGE_KEY_RANGE_TO = 'event_caller_range_to_v4';
+
+        let lastDialedId = null;
+        let dialedHistory = [];
+        let contactStatuses = {};
+        let hideCompleted = true;
+        let rangeFrom = '';
+        let rangeTo = '';
+        
+        let pendingStatusId = null;
+
+        // Load values from LocalStorage
+        function initData() {
+            try {
+                const savedLast = localStorage.getItem(STORAGE_KEY_LAST);
+                if (savedLast) lastDialedId = parseInt(savedLast, 10);
+
+                const savedHist = localStorage.getItem(STORAGE_KEY_HIST);
+                if (savedHist) dialedHistory = JSON.parse(savedHist);
+
+                const savedStatuses = localStorage.getItem(STORAGE_KEY_STATUSES);
+                if (savedStatuses) contactStatuses = JSON.parse(savedStatuses);
+
+                const savedHideCompleted = localStorage.getItem(STORAGE_KEY_HIDE_COMPLETED);
+                if (savedHideCompleted !== null) {
+                    hideCompleted = (savedHideCompleted === 'true');
+                    document.getElementById('hideCompletedChk').checked = hideCompleted;
+                }
+
+                const savedRangeFrom = localStorage.getItem(STORAGE_KEY_RANGE_FROM);
+                if (savedRangeFrom) {
+                    rangeFrom = savedRangeFrom;
+                    document.getElementById('rngFrom').value = savedRangeFrom;
+                }
+
+                const savedRangeTo = localStorage.getItem(STORAGE_KEY_RANGE_TO);
+                if (savedRangeTo) {
+                    rangeTo = savedRangeTo;
+                    document.getElementById('rngTo').value = savedRangeTo;
+                }
+            } catch(e) {
+                console.error("Localstorage load error", e);
+            }
+            
+            // Check if we need to show feedback panel for an existing lastDialedId
+            if (lastDialedId !== null) {
+                openFeedback(lastDialedId);
+            }
+            
+            renderTable();
+        }
+
+        // Tap Dial and trigger state change
+        function onDialNumber(id) {
+            lastDialedId = id;
+            try {
+                localStorage.setItem(STORAGE_KEY_LAST, id.toString());
+                
+                if (!dialedHistory.includes(id)) {
+                    dialedHistory.push(id);
+                    localStorage.setItem(STORAGE_KEY_HIST, JSON.stringify(dialedHistory));
+                }
+            } catch(e) {
+                console.error(e);
+            }
+            
+            openFeedback(id);
+            renderTable();
+        }
+
+        // Open status dialog
+        function openFeedback(id) {
+            const guest = contacts_list.find(c => c.id === id);
+            if (!guest) return;
+            pendingStatusId = id;
+            
+            const promptNameEl = document.getElementById('promptName');
+            promptNameEl.innerText = guest.name + ' (#' + guest.id + ')';
+            
+            const panel = document.getElementById('feedbackPanel');
+            panel.style.display = 'block';
+        }
+
+        function closeFeedbackPanel() {
+            document.getElementById('feedbackPanel').style.style = 'none';
+            document.getElementById('feedbackPanel').style.display = 'none';
+            pendingStatusId = null;
+        }
+
+        // Set status
+        function setOfflineStatus(status) {
+            if (pendingStatusId === null) return;
+            const targetId = pendingStatusId;
+            
+            if (status === null) {
+                delete contactStatuses[targetId];
+            } else {
+                contactStatuses[targetId] = status;
+            }
+            
+            try {
+                localStorage.setItem(STORAGE_KEY_STATUSES, JSON.stringify(contactStatuses));
+            } catch(e){}
+            
+            // Auto hide last dialed ID if user chose a status
+            if (lastDialedId === targetId) {
+                lastDialedId = null;
+                localStorage.removeItem(STORAGE_KEY_LAST);
+            }
+            
+            closeFeedbackPanel();
+            renderTable();
+        }
+
+        function clearOfflineDialHistory() {
+            if(confirm("Are you sure you want to deep reset all contact database history and range parameters?")) {
+                lastDialedId = null;
+                dialedHistory = [];
+                contactStatuses = {};
+                rangeFrom = '';
+                rangeTo = '';
+                document.getElementById('rngFrom').value = '';
+                document.getElementById('rngTo').value = '';
+                document.getElementById('searchInput').value = '';
+                
+                try {
+                    localStorage.removeItem(STORAGE_KEY_LAST);
+                    localStorage.removeItem(STORAGE_KEY_HIST);
+                    localStorage.removeItem(STORAGE_KEY_STATUSES);
+                    localStorage.removeItem(STORAGE_KEY_RANGE_FROM);
+                    localStorage.removeItem(STORAGE_KEY_RANGE_TO);
+                } catch(e) {}
+                
+                closeFeedbackPanel();
+                renderTable();
+            }
+        }
+
+        function toggleCompletedVisibility() {
+            hideCompleted = document.getElementById('hideCompletedChk').checked;
+            try {
+                localStorage.setItem(STORAGE_KEY_HIDE_COMPLETED, hideCompleted.toString());
+            } catch(e){}
+            renderTable();
+        }
+
+        function onRangeChange() {
+            rangeFrom = document.getElementById('rngFrom').value;
+            rangeTo = document.getElementById('rngTo').value;
+            try {
+                if (rangeFrom) localStorage.setItem(STORAGE_KEY_RANGE_FROM, rangeFrom);
+                else localStorage.removeItem(STORAGE_KEY_RANGE_FROM);
+                
+                if (rangeTo) localStorage.setItem(STORAGE_KEY_RANGE_TO, rangeTo);
+                else localStorage.removeItem(STORAGE_KEY_RANGE_TO);
+            } catch(e){}
+            renderTable();
+        }
+
+        function presetOfflineRange(from, to) {
+            rangeFrom = from;
+            rangeTo = to;
+            document.getElementById('rngFrom').value = from;
+            document.getElementById('rngTo').value = to;
+            try {
+                localStorage.setItem(STORAGE_KEY_RANGE_FROM, from.toString());
+                localStorage.setItem(STORAGE_KEY_RANGE_TO, to.toString());
+            } catch(e){}
+            renderTable();
+        }
+
+        function clearOfflineRange() {
+            rangeFrom = '';
+            rangeTo = '';
+            document.getElementById('rngFrom').value = '';
+            document.getElementById('rngTo').value = '';
+            try {
+                localStorage.removeItem(STORAGE_KEY_RANGE_FROM);
+                localStorage.removeItem(STORAGE_KEY_RANGE_TO);
+            } catch(e){}
+            renderTable();
+        }
+
+        function filterContacts() {
+            renderTable();
+        }
+
+        // Render rows dynamically
+        function renderTable() {
+            const tBody = document.getElementById('contactsTableBody');
+            tBody.innerHTML = '';
+
+            const query = document.getElementById('searchInput').value.toLowerCase().replace(/\s+/g, '');
+            
+            // Build the dynamic filtered array
+            const list = contacts_list.filter(c => {
+                // Range Filter
+                const f = rangeFrom ? parseInt(rangeFrom, 10) : 1;
+                const t = rangeTo ? parseInt(rangeTo, 10) : 134;
+                if (c.id < f || c.id > t) return false;
+
+                // Completed Filter
+                if (hideCompleted && contactStatuses[c.id] === 'completed') {
+                    return false;
+                }
+
+                // Search query
+                if (!query) return true;
+                return c.name.toLowerCase().replace(/\s+/g, '').includes(query) || 
+                       c.phone.includes(query) ||
+                       c.id.toString() === query;
+            });
+
+            if (list.length === 0) {
+                tBody.innerHTML = '<tr><td colspan="3" class="empty-state">No matching guests found with current filters.</td></tr>';
+                return;
+            }
+
+            list.forEach(c => {
+                const isLastDialed = (c.id === lastDialedId);
+                const isAlreadyDialed = dialedHistory.includes(c.id);
+                const status = contactStatuses[c.id];
+
+                const tr = document.createElement('tr');
+                if (isLastDialed) {
+                    tr.className = 'last-dialed-row';
+                } else if (isAlreadyDialed) {
+                    tr.className = 'already-dialed-row';
+                }
+
+                // Build status badge
+                let statusBadgeHtml = '';
+                if (status === 'completed') {
+                    statusBadgeHtml = '<span class="badge-pill badge-completed">✅ Completed</span>';
+                } else if (status === 'no_answer') {
+                    statusBadgeHtml = '<span class="badge-pill badge-no_answer">📵 Didn\'t Lift</span>';
+                } else if (status === 'switched_off') {
+                    statusBadgeHtml = '<span class="badge-pill badge-switched_off">📴 Switch Off</span>';
+                } else if (status === 'poor_signal') {
+                    statusBadgeHtml = '<span class="badge-pill badge-poor_signal">📶 Poor Signal</span>';
+                }
+
+                tr.innerHTML = `
+                    <td class="sno-cell">${c.id}</td>
+                    <td>
+                        <div class="name-wrapper" onclick="openFeedback(${c.id})">
+                            <span class="name-cell">${c.name}</span>
+                            ${statusBadgeHtml}
+                        </div>
+                    </td>
+                    <td>
+                        <a href="tel:${c.phone}" class="phone-link" onclick="onDialNumber(${c.id})">
+                            ${c.phone}
+                        </a>
+                    </td>
+                `;
+                tBody.appendChild(tr);
+            });
+        }
+
+        // Initialize table
+        window.onload = initData;
+    </script>
+</body>
+</html>
